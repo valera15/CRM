@@ -1,15 +1,41 @@
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton, QCalendarWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton, QStackedWidget, QCalendarWidget, QTableWidgetItem, QHeaderView, QTableWidget
 import sys
-import datetime
+
+
+class MainStackedWindow(QMainWindow):
+    def __init__(self):
+        super(MainStackedWindow, self).__init__()
+        self.setWindowTitle("Шаги к счастью")
+        self.setGeometry(0, 0, 1920, 1080)
+
+        # Создаем стек виджетов
+        self.central_widget = QStackedWidget()
+        self.setCentralWidget(self.central_widget)
+
+        # Создаем окна
+        self.main_window = MainWindow(self)
+        self.second_window = SecondWindow(self)
+
+        # Добавляем окна в стек
+        self.central_widget.addWidget(self.main_window)
+        self.central_widget.addWidget(self.second_window)
+
+        # Устанавливаем начальное окно
+        self.central_widget.setCurrentWidget(self.main_window)
+
+    def switch_to_window(self, window):
+        """Переключение на указанное окно"""
+        if window not in [self.central_widget.widget(i) for i in range(self.central_widget.count())]:
+            self.central_widget.addWidget(window)
+        self.central_widget.setCurrentWidget(window)
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
-        super(MainWindow, self).__init__()
+    def __init__(self, parent):
+        super(MainWindow, self).__init__(parent)
 
-        self.setWindowTitle("Шаги к счастью")
-        self.setGeometry(0, 0, 1920, 1080)
+        self.parent = parent
 
         # Заголовок
         self.main_text = QLabel(self)
@@ -52,177 +78,443 @@ class MainWindow(QMainWindow):
         login = self.login_input.text()
         password = self.password_input.text()
 
-        if login == "abc" and password == "123":
-            self.open_new_window()
+        if login == "" and password == "":
+            # Переключаемся на второе окно
+            self.parent.switch_to_window(self.parent.second_window)
         else:
-            # Очищаем поля для ввода
             self.login_input.clear()
             self.password_input.clear()
-
-            # Ставим фокус на поле логина для нового ввода
             self.login_input.setFocus()
-
-    def open_new_window(self):
-        try:
-            # Закрытие текущего окна перед открытием нового
-            self.close()
-            self.new_window = SecondWindow()  # Создаём новое окно
-            self.new_window.showFullScreen()  # Показываем новое окно
-        except Exception as e:
-            print(f"Ошибка при открытии нового окна: {e}")
-            QApplication.quit()  # Завершаем программу в случае ошибки
 
 
 class SecondWindow(QMainWindow):
-    def __init__(self):
-        super(SecondWindow, self).__init__()
+    def __init__(self, parent):
+        super(SecondWindow, self).__init__(parent)
 
-        self.setWindowTitle("Главная страница")
-        self.setGeometry(0, 0, 1920, 1080)
+        self.parent = parent
 
         # Заголовок
         self.title = QLabel(self)
         self.title.setText("Главная страница")
         self.title.setAlignment(QtCore.Qt.AlignCenter)
-        self.title.setGeometry(560, 50, 800, 150)  # Сдвигаем правее, увеличиваем ширину и высоту
-        self.title.setStyleSheet("font-size: 96px;")  # Увеличиваем размер шрифта
+        self.title.setGeometry(560, 50, 800, 150)
+        self.title.setStyleSheet("font-size: 96px;")
 
         # Календарь
-        self.create_calendar()
+        self.calendar = QCalendarWidget(self)
+        self.calendar.setGeometry(1000, 300, 800, 600)
+        self.calendar.setStyleSheet("font-size: 24px;")
+        self.calendar.setGridVisible(True)
 
-        # Кнопка "Выйти из системы"
+        # Кнопка "Выйти"
         self.logout_button = QPushButton(self)
-        self.logout_button.setText("Выйти из системы")
+        self.logout_button.setText("Выйти")
         self.logout_button.setGeometry(1550, 100, 250, 50)
         self.logout_button.setStyleSheet("font-size: 24px;")
         self.logout_button.clicked.connect(self.logout)
 
-        # Создание кнопок с многосрочным текстом
+        # Создаем квадратные кнопки
         self.create_square_buttons()
 
-        # Текущее время
-        self.create_time_label()
-
-        # Обновление времени каждую секунду
-        self.timer = QtCore.QTimer(self)
-        self.timer.timeout.connect(self.update_time)
-        self.timer.start(1000)  # Обновление каждую секунду
+    def logout(self):
+        # Переключаемся обратно на главное окно
+        self.parent.switch_to_window(self.parent.main_window)
 
     def create_square_buttons(self):
         buttons = [
-            ("Список\nтренеров", 100, 200, TrainerListWindow),
-            ("Список\nнаправлений", 400, 200, DirectionListWindow),
-            ("Список\nучеников", 700, 200, StudentListWindow),
-            ("Расписание", 100, 500, ScheduleWindow),
-            ("Восстановление\nпропуска", 400, 500, PassRecoveryWindow),
-            ("Регистрация\nученика", 700, 500, StudentRegistrationWindow),
-            ("Продажа\nтренировки", 100, 800, TrainingSaleWindow),
-            ("Пропускная\nсистема", 400, 800, AccessControlWindow),
+            ("Список\nтренеров", TrainerListWindow),
+            ("Список\nнаправлений", DirectionListWindow),
+            ("Список\nучеников", StudentListWindow),
+            ("Расписание", ScheduleWindow),
+            ("Восстановление\nпропуска", PassRecoveryWindow),
+            ("Регистрация\nученика", StudentRegistrationWindow),
+            ("Продажа\nтренировки", TrainingSaleWindow),
+            ("Пропускная\nсистема", AccessControlWindow),
         ]
 
-        for text, x, y, window_class in buttons:
+        x, y = 100, 200
+        for text, window_class in buttons:
             button = QPushButton(self)
             button.setText(text)
-
-            if text == "Пропускная\nсистема":
-                button.setGeometry(x, y, 550, 250)  # Увеличиваем ширину кнопки "Пропускная система"
-            else:
-                button.setGeometry(x, y, 250, 250)  # Оставляем остальные кнопки стандартными
-
-            button.setStyleSheet("font-size: 24px; white-space: pre-wrap;")  # Включаем перенос текста
+            button.setGeometry(x, y, 250, 150)
+            button.setStyleSheet("font-size: 24px;")
             button.clicked.connect(lambda _, w=window_class: self.open_new_window(w))
+            x += 300
+            if x > 700:  # Переход на новую строку
+                x = 100
+                y += 300
 
     def open_new_window(self, window_class):
-        self.new_window = window_class()
-        self.new_window.show()
-
-    def create_calendar(self):
-        self.calendar = QCalendarWidget(self)
-        self.calendar.setGeometry(1000, 300, 800, 600)  # Сдвигаем календарь ближе к кнопкам
-        self.calendar.setStyleSheet("font-size: 24px;")
-        self.calendar.setGridVisible(True)
-
-        # Скрыть номера недель с помощью изменения стиля
-        self.calendar.setVerticalHeaderFormat(QCalendarWidget.NoVerticalHeader)
-
-        # Убедитесь, что размер календаря подходящий
-        self.calendar.setFixedSize(800, 600)  # Устанавливаем фиксированный размер календаря
-
-        self.calendar.setSelectedDate(QtCore.QDate.currentDate())
-
-    def create_time_label(self):
-        self.time_label = QLabel(self)
-        self.time_label.setGeometry(1250, 200, 300, 100)
-        self.time_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.time_label.setStyleSheet("font-size: 72px;")
-        self.update_time()  # Сразу отображаем актуальное время
-
-    def update_time(self):
-        current_time = datetime.datetime.now().strftime("%H:%M:%S")  # Получаем актуальное время
-        self.time_label.setText(current_time)
+        new_window = window_class(self.parent)
+        self.parent.switch_to_window(new_window)
 
     def logout(self):
-        QApplication.quit()  # Закрывает все окна и завершает приложение
+        # Завершить приложение
+        QApplication.quit()
+    def logout(self):
+        QApplication.quit()
+
+from PyQt5.QtWidgets import (
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QLabel, QLineEdit, QPushButton, QTableWidget,
+    QTableWidgetItem, QHeaderView
+)
+from PyQt5.QtCore import Qt
 
 
 class TrainerListWindow(QMainWindow):
-    def __init__(self):
-        super(TrainerListWindow, self).__init__()
-        self.setWindowTitle("Список тренеров")
+    def __init__(self, parent):
+        super(TrainerListWindow, self).__init__(parent)
+        self.parent = parent
+
+        # Центральный виджет и общий layout
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+        main_layout = QVBoxLayout(central_widget)
+
+        # Заголовок
+        self.title_label = QLabel("Список тренеров", self)
+        self.title_label.setAlignment(Qt.AlignCenter)
+        self.title_label.setStyleSheet("font-size: 32px; font-weight: bold; margin: 10px;")
+        main_layout.addWidget(self.title_label)
+
+        # Верхний слой: строка поиска и кнопки
+        top_layout = QHBoxLayout()
+
+        # Строка поиска
+        self.search_bar = QLineEdit(self)
+        self.search_bar.setPlaceholderText("Поиск...")
+        self.search_bar.setStyleSheet("font-size: 24px;")
+        self.search_bar.setFixedWidth(300)
+        self.search_bar.textChanged.connect(self.filter_table)
+        top_layout.addWidget(self.search_bar)
+
+        # Кнопка "Назад"
+        self.back_button = QPushButton(self)
+        self.back_button.setText("⟸")
+        self.back_button.setStyleSheet("font-size: 24px; padding: 10px;")
+        self.back_button.clicked.connect(lambda: self.parent.switch_to_window(self.parent.second_window))
+        top_layout.addWidget(self.back_button)
+
+        # Кнопки управления записями
+        self.add_button = QPushButton("Добавить")
+        self.add_button.setStyleSheet("font-size: 20px; padding: 5px;")
+        self.add_button.clicked.connect(self.add_record)  # Подключить обработчик
+        top_layout.addWidget(self.add_button)
+
+        self.edit_button = QPushButton("Редактировать")
+        self.edit_button.setStyleSheet("font-size: 20px; padding: 5px;")
+        self.edit_button.clicked.connect(self.edit_record)  # Подключить обработчик
+        top_layout.addWidget(self.edit_button)
+
+        self.delete_button = QPushButton("Удалить")
+        self.delete_button.setStyleSheet("font-size: 20px; padding: 5px;")
+        self.delete_button.clicked.connect(self.delete_record)  # Подключить обработчик
+        top_layout.addWidget(self.delete_button)
+
+        # Добавление отступов
+        top_layout.addStretch()
+        main_layout.addLayout(top_layout)
+
+        # Таблица
+        self.table = QTableWidget(self)
+        self.table.setColumnCount(7)
+        self.table.setHorizontalHeaderLabels([
+            "Номер пропуска",
+            "ФИО",
+            "Дата рождения",
+            "Номер телефона",
+            "Направление",
+            "Количество проведенных тренировок",
+            "Численность учеников"
+        ])
+        self.table.setRowCount(10)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        main_layout.addWidget(self.table)
+
+        # Заполнение таблицы тестовыми данными
+        for row in range(10):
+            for col in range(7):
+                self.table.setItem(row, col, QTableWidgetItem(f"Данные {row + 1}-{col + 1}"))
+
+    def filter_table(self):
+        search_text = self.search_bar.text().lower()
+        for row in range(self.table.rowCount()):
+            match = False
+            for col in range(self.table.columnCount()):
+                item = self.table.item(row, col)
+                if item and search_text in item.text().lower():
+                    match = True
+                    break
+            self.table.setRowHidden(row, not match)
+
+    # Обработчики для кнопок управления записями
+    def add_record(self):
+        print("Добавить запись")  # Реализуйте добавление записи
+
+    def edit_record(self):
+        selected_items = self.table.selectedItems()
+        if selected_items:
+            print("Редактировать запись:", selected_items[0].text())  # Реализуйте редактирование записи
+        else:
+            print("Не выбрана запись для редактирования")
+
+    def delete_record(self):
+        selected_items = self.table.selectedItems()
+        if selected_items:
+            print("Удалить запись:", selected_items[0].text())  # Реализуйте удаление записи
+        else:
+            print("Не выбрана запись для удаления")
 
 
 class DirectionListWindow(QMainWindow):
-    def __init__(self):
-        super(DirectionListWindow, self).__init__()
-        self.setWindowTitle("Список направлений")
+    def __init__(self, parent):
+        super(DirectionListWindow, self).__init__(parent)
+        self.parent = parent
 
+        # Центральный виджет и общий layout
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+        main_layout = QVBoxLayout(central_widget)
+
+        # Заголовок
+        self.title_label = QLabel("Список направлений", self)
+        self.title_label.setAlignment(Qt.AlignCenter)
+        self.title_label.setStyleSheet("font-size: 32px; font-weight: bold; margin: 10px;")
+        main_layout.addWidget(self.title_label)
+
+        # Верхний слой: строка поиска и кнопки
+        top_layout = QHBoxLayout()
+
+        # Строка поиска
+        self.search_bar = QLineEdit(self)
+        self.search_bar.setPlaceholderText("Поиск...")
+        self.search_bar.setStyleSheet("font-size: 24px;")
+        self.search_bar.setFixedWidth(300)
+        self.search_bar.textChanged.connect(self.filter_table)
+        top_layout.addWidget(self.search_bar)
+
+        # Кнопка "Назад"
+        self.back_button = QPushButton(self)
+        self.back_button.setText("⟸")
+        self.back_button.setStyleSheet("font-size: 24px; padding: 10px;")
+        self.back_button.clicked.connect(lambda: self.parent.switch_to_window(self.parent.second_window))
+        top_layout.addWidget(self.back_button)
+
+        # Кнопки управления записями
+        self.add_button = QPushButton("Добавить")
+        self.add_button.setStyleSheet("font-size: 20px; padding: 5px;")
+        self.add_button.clicked.connect(self.add_record)  # Подключить обработчик
+        top_layout.addWidget(self.add_button)
+
+        self.edit_button = QPushButton("Редактировать")
+        self.edit_button.setStyleSheet("font-size: 20px; padding: 5px;")
+        self.edit_button.clicked.connect(self.edit_record)  # Подключить обработчик
+        top_layout.addWidget(self.edit_button)
+
+        self.delete_button = QPushButton("Удалить")
+        self.delete_button.setStyleSheet("font-size: 20px; padding: 5px;")
+        self.delete_button.clicked.connect(self.delete_record)  # Подключить обработчик
+        top_layout.addWidget(self.delete_button)
+
+        # Добавление отступов
+        top_layout.addStretch()
+        main_layout.addLayout(top_layout)
+
+        # Таблица
+        self.table = QTableWidget(self)
+        self.table.setColumnCount(3)
+        self.table.setHorizontalHeaderLabels([
+            "ФИО тренера",
+            "Направление",
+            "Свободные места"
+        ])
+        self.table.setRowCount(10)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        main_layout.addWidget(self.table)
+
+        # Заполнение таблицы тестовыми данными
+        for row in range(10):
+            for col in range(7):
+                self.table.setItem(row, col, QTableWidgetItem(f"Данные {row + 1}-{col + 1}"))
+
+    def filter_table(self):
+        search_text = self.search_bar.text().lower()
+        for row in range(self.table.rowCount()):
+            match = False
+            for col in range(self.table.columnCount()):
+                item = self.table.item(row, col)
+                if item and search_text in item.text().lower():
+                    match = True
+                    break
+            self.table.setRowHidden(row, not match)
+
+    # Обработчики для кнопок управления записями
+    def add_record(self):
+        print("Добавить запись")  # Реализуйте добавление записи
+
+    def edit_record(self):
+        selected_items = self.table.selectedItems()
+        if selected_items:
+            print("Редактировать запись:", selected_items[0].text())  # Реализуйте редактирование записи
+        else:
+            print("Не выбрана запись для редактирования")
+
+    def delete_record(self):
+        selected_items = self.table.selectedItems()
+        if selected_items:
+            print("Удалить запись:", selected_items[0].text())  # Реализуйте удаление записи
+        else:
+            print("Не выбрана запись для удаления")
 
 class StudentListWindow(QMainWindow):
-    def __init__(self):
-        super(StudentListWindow, self).__init__()
-        self.setWindowTitle("Список учеников")
+    def __init__(self, parent):
+        super(StudentListWindow, self).__init__(parent)
+        self.parent = parent
 
+        # Центральный виджет и общий layout
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+        main_layout = QVBoxLayout(central_widget)
+
+        # Заголовок
+        self.title_label = QLabel("Список учеников", self)
+        self.title_label.setAlignment(Qt.AlignCenter)
+        self.title_label.setStyleSheet("font-size: 32px; font-weight: bold; margin: 10px;")
+        main_layout.addWidget(self.title_label)
+
+        # Верхний слой: строка поиска и кнопки
+        top_layout = QHBoxLayout()
+
+        # Строка поиска
+        self.search_bar = QLineEdit(self)
+        self.search_bar.setPlaceholderText("Поиск...")
+        self.search_bar.setStyleSheet("font-size: 24px;")
+        self.search_bar.setFixedWidth(300)
+        self.search_bar.textChanged.connect(self.filter_table)
+        top_layout.addWidget(self.search_bar)
+
+        # Кнопка "Назад"
+        self.back_button = QPushButton(self)
+        self.back_button.setText("⟸")
+        self.back_button.setStyleSheet("font-size: 24px; padding: 10px;")
+        self.back_button.clicked.connect(lambda: self.parent.switch_to_window(self.parent.second_window))
+        top_layout.addWidget(self.back_button)
+
+        # Кнопки управления записями
+        self.edit_button = QPushButton("Редактировать")
+        self.edit_button.setStyleSheet("font-size: 20px; padding: 5px;")
+        self.edit_button.clicked.connect(self.edit_record)  # Подключить обработчик
+        top_layout.addWidget(self.edit_button)
+
+        self.delete_button = QPushButton("Удалить")
+        self.delete_button.setStyleSheet("font-size: 20px; padding: 5px;")
+        self.delete_button.clicked.connect(self.delete_record)  # Подключить обработчик
+        top_layout.addWidget(self.delete_button)
+
+        # Добавление отступов
+        top_layout.addStretch()
+        main_layout.addLayout(top_layout)
+
+        # Таблица
+        self.table = QTableWidget(self)
+        self.table.setColumnCount(6)
+        self.table.setHorizontalHeaderLabels([
+            "Номер пропуска",
+            "ФИО",
+            "Дата рождения",
+            "Номер телефона",
+            "Направление и тренер",
+            "Количество тренировок"
+        ])
+        self.table.setRowCount(10)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        main_layout.addWidget(self.table)
+
+        # Заполнение таблицы тестовыми данными
+        for row in range(10):
+            for col in range(7):
+                self.table.setItem(row, col, QTableWidgetItem(f"Данные {row + 1}-{col + 1}"))
+
+    def filter_table(self):
+        search_text = self.search_bar.text().lower()
+        for row in range(self.table.rowCount()):
+            match = False
+            for col in range(self.table.columnCount()):
+                item = self.table.item(row, col)
+                if item and search_text in item.text().lower():
+                    match = True
+                    break
+            self.table.setRowHidden(row, not match)
+
+    # Обработчики для кнопок управления записями
+    def add_record(self):
+        print("Добавить запись")  # Реализуйте добавление записи
+
+    def edit_record(self):
+        selected_items = self.table.selectedItems()
+        if selected_items:
+            print("Редактировать запись:", selected_items[0].text())  # Реализуйте редактирование записи
+        else:
+            print("Не выбрана запись для редактирования")
+
+    def delete_record(self):
+        selected_items = self.table.selectedItems()
+        if selected_items:
+            print("Удалить запись:", selected_items[0].text())  # Реализуйте удаление записи
+        else:
+            print("Не выбрана запись для удаления")
 
 class ScheduleWindow(QMainWindow):
-    def __init__(self):
-        super(ScheduleWindow, self).__init__()
-        self.setWindowTitle("Расписание")
-
+    def __init__(self, parent):
+        super(ScheduleWindow, self).__init__(parent)
+        self.parent = parent
+        self.create_back_button()
 
 class PassRecoveryWindow(QMainWindow):
-    def __init__(self):
-        super(PassRecoveryWindow, self).__init__()
-        self.setWindowTitle("Восстановление пропуска")
-
+    def __init__(self, parent):
+        super(PassRecoveryWindow, self).__init__(parent)
+        self.parent = parent
+        self.create_back_button()
 
 class StudentRegistrationWindow(QMainWindow):
-    def __init__(self):
-        super(StudentRegistrationWindow, self).__init__()
-        self.setWindowTitle("Регистрация ученика")
-
+    def __init__(self, parent):
+        super(StudentRegistrationWindow, self).__init__(parent)
+        self.parent = parent
+        self.create_back_button()
 
 class TrainingSaleWindow(QMainWindow):
-    def __init__(self):
-        super(TrainingSaleWindow, self).__init__()
-        self.setWindowTitle("Продажа тренировки")
-
+    def __init__(self, parent):
+        super(TrainingSaleWindow, self).__init__(parent)
+        self.parent = parent
+        self.create_back_button()
 
 class AccessControlWindow(QMainWindow):
-    def __init__(self):
-        super(AccessControlWindow, self).__init__()
-        self.setWindowTitle("Пропускная система")
+    def __init__(self, parent):
+        super(AccessControlWindow, self).__init__(parent)
+        self.parent = parent
+        self.create_back_button()
+
+# Добавляем метод для кнопки "Назад"
+def create_back_button(self):
+    self.back_button = QPushButton(self)
+    self.back_button.setText("⟸")
+    self.back_button.setGeometry(50, 10, 80, 60)
+    self.back_button.setStyleSheet("font-size: 48px;")
+    self.back_button.clicked.connect(lambda: self.parent.switch_to_window(self.parent.second_window))
+
+
+# Привязываем метод ко всем окнам
+for cls in [TrainerListWindow, DirectionListWindow, StudentListWindow, ScheduleWindow,
+            PassRecoveryWindow, StudentRegistrationWindow, TrainingSaleWindow, AccessControlWindow]:
+    cls.create_back_button = create_back_button
 
 
 def application():
-    try:
-        app = QApplication(sys.argv)
-        win = MainWindow()
-
-        win.showFullScreen()
-        sys.exit(app.exec_())
-    except Exception as e:
-        print(f"Ошибка в приложении: {e}")
-        sys.exit(1)  # Завершаем приложение с кодом ошибки
+    app = QApplication(sys.argv)
+    main_window = MainStackedWindow()
+    main_window.showFullScreen()
+    sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
