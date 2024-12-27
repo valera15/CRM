@@ -1,7 +1,23 @@
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton, QStackedWidget, QCalendarWidget, QTableWidgetItem, QHeaderView, QTableWidget
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel,
+QLineEdit, QPushButton, QStackedWidget, QCalendarWidget, QTableWidgetItem,
+QHeaderView, QTableWidget, QComboBox, QScrollBar)
+from PyQt5.QtGui import QColor
+from PyQt5.QtCore import Qt, QTimer
 import sys
+from PyQt5.QtWidgets import (
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QLabel, QLineEdit, QPushButton, QTableWidget,
+    QTableWidgetItem, QHeaderView
+)
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QTableWidget, QTableWidgetItem, QPushButton, QComboBox, QLabel, QScrollBar
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QColor
 
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QPushButton, QComboBox, QLabel, QScrollBar, QWidget, QToolBar
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QColor
 
 class MainStackedWindow(QMainWindow):
     def __init__(self):
@@ -125,7 +141,7 @@ class SecondWindow(QMainWindow):
             ("Список\nтренеров", TrainerListWindow),
             ("Список\nнаправлений", DirectionListWindow),
             ("Список\nучеников", StudentListWindow),
-            ("Расписание", ScheduleWindow),
+            ("Расписание", ScheduleApp),
             ("Восстановление\nпропуска", PassRecoveryWindow),
             ("Регистрация\nученика", StudentRegistrationWindow),
             ("Продажа\nтренировки", TrainingSaleWindow),
@@ -153,14 +169,6 @@ class SecondWindow(QMainWindow):
         QApplication.quit()
     def logout(self):
         QApplication.quit()
-
-from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QPushButton, QTableWidget,
-    QTableWidgetItem, QHeaderView
-)
-from PyQt5.QtCore import Qt
-
 
 class TrainerListWindow(QMainWindow):
     def __init__(self, parent):
@@ -465,11 +473,203 @@ class StudentListWindow(QMainWindow):
         else:
             print("Не выбрана запись для удаления")
 
-class ScheduleWindow(QMainWindow):
-    def __init__(self, parent):
-        super(ScheduleWindow, self).__init__(parent)
-        self.parent = parent
-        self.create_back_button()
+
+
+
+
+class ScheduleApp(QMainWindow):
+    def __init__(self, parent=None):
+        super(ScheduleApp, self).__init__(parent)
+        self.parent = parent  # Сохраняем родительское окно
+        self.setWindowTitle("Расписание тренировок")
+        self.showFullScreen()  # Включаем полноэкранный режим
+        self.init_ui()
+
+    def init_ui(self):
+        # Основной лейаут
+        main_layout = QHBoxLayout()  # Горизонтальный лейаут для размещения элементов слева и справа
+
+        # Контейнер для кнопки "Назад" (в левый верхний угол)
+        back_button = QPushButton("Назад")
+        back_button.setFixedSize(100, 40)
+        back_button.clicked.connect(self.on_back_button_click)
+
+        # Размещаем кнопку в верхнем левом углу
+        back_button_layout = QHBoxLayout()
+        back_button_layout.setContentsMargins(0, 0, 0, 0)  # Убираем отступы
+        back_button_layout.addWidget(back_button, alignment=Qt.AlignTop | Qt.AlignLeft)
+
+        # Добавляем кнопку в основной лейаут
+        main_layout.addLayout(back_button_layout)
+
+        # Контейнер для таблицы расписания (слева)
+        schedule_layout = QVBoxLayout()
+        self.schedule_table = QTableWidget(8, 7)
+        self.schedule_table.setHorizontalHeaderLabels(["пн", "вт", "ср", "чт", "пт", "сб", "вс"])
+        self.schedule_table.setVerticalHeaderLabels(["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"])
+        self.schedule_table.setSelectionMode(QTableWidget.SingleSelection)
+        self.schedule_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.schedule_table.itemSelectionChanged.connect(self.update_schedule)
+
+        # Увеличиваем размер таблицы расписания
+        for col in range(7):  # 7 столбцов
+            self.schedule_table.setColumnWidth(col, 120)  # Увеличиваем ширину столбцов
+
+        # Увеличиваем высоту строк
+        for row in range(8):  # 8 строк
+            self.schedule_table.setRowHeight(row, 80)
+
+        # Устанавливаем фиксированный размер таблицы
+        self.schedule_table.setFixedSize(840, 640)  # Увеличиваем размер таблицы
+        schedule_layout.addWidget(self.schedule_table)
+        main_layout.addLayout(schedule_layout)
+
+        # Контейнер для текста (по центру)
+        text_layout = QVBoxLayout()
+
+        # Для каждого комбобокса, метки и лейаута устанавливаем фиксированные размеры
+        hall_layout = QHBoxLayout()
+        self.hall_combo = QComboBox()
+        self.hall_combo.addItems(["1", "2", "3"])
+        hall_layout.addWidget(QLabel("№ зала"))
+        hall_layout.addWidget(self.hall_combo)
+        text_layout.addLayout(hall_layout)
+
+        # Устанавливаем фиксированный размер для комбобокса
+        self.hall_combo.setFixedSize(100, 30)
+
+        pass_layout = QHBoxLayout()
+        self.pass_combo = QComboBox()
+        self.pass_combo.addItems(["100", "101", "102"])
+        pass_layout.addWidget(QLabel("№ пропуска"))
+        pass_layout.addWidget(self.pass_combo)
+        text_layout.addLayout(pass_layout)
+
+        # Устанавливаем фиксированный размер для комбобокса
+        self.pass_combo.setFixedSize(100, 30)
+
+        trainer_layout = QHBoxLayout()
+        self.trainer_combo = QComboBox()
+        self.trainer_combo.addItems(["Иванов", "Петров", "Сидоров"])
+        trainer_layout.addWidget(QLabel("ФИО тренера"))
+        trainer_layout.addWidget(self.trainer_combo)
+        text_layout.addLayout(trainer_layout)
+
+        # Устанавливаем фиксированный размер для комбобокса
+        self.trainer_combo.setFixedSize(100, 30)
+
+        # Устанавливаем фиксированный размер для меток
+        for i in range(text_layout.count()):
+            widget = text_layout.itemAt(i).widget()
+            if isinstance(widget, QLabel):
+                widget.setFixedSize(100, 30)  # Устанавливаем размер для меток
+
+        text_layout.setContentsMargins(20, 20, 20, 20)  # Устанавливаем отступы
+        text_layout.setSpacing(10)  # Интервал между элементами
+
+        # Добавляем текстовый контейнер в основной лейаут
+        main_layout.addLayout(text_layout)
+
+        # Контейнер для таблицы тренеров (справа)
+        extra_trainers_layout = QVBoxLayout()
+        self.extra_trainers_table = QTableWidget(3, 2)
+        self.extra_trainers_table.setHorizontalHeaderLabels(["ФИО тренера", "Цвет"])
+        self.extra_trainers_table.setItem(0, 0, QTableWidgetItem("Иванов"))
+        self.extra_trainers_table.setItem(0, 1, QTableWidgetItem("blue"))
+        self.extra_trainers_table.setItem(1, 0, QTableWidgetItem("Петров"))
+        self.extra_trainers_table.setItem(1, 1, QTableWidgetItem("green"))
+        self.extra_trainers_table.setItem(2, 0, QTableWidgetItem("Сидоров"))
+        self.extra_trainers_table.setItem(2, 1, QTableWidgetItem("red"))
+        self.extra_trainers_table.setFixedWidth(200)  # Устанавливаем фиксированную ширину таблицы тренеров
+
+        # Привязываем таблицу тренеров к верху
+        extra_trainers_layout.addWidget(QLabel("Таблица тренеров (дублированная)"))
+        extra_trainers_layout.addWidget(self.extra_trainers_table)
+
+        # Устанавливаем фиксированный размер для таблицы тренеров
+        self.extra_trainers_table.setFixedSize(200, 200)
+
+        # Устанавливаем отступы для контейнера
+        extra_trainers_layout.setContentsMargins(20, 20, 20, 20)
+        extra_trainers_layout.setSpacing(10)
+
+        # Устанавливаем фиксированный размер для контейнера с таблицей тренеров
+        extra_trainers_layout.setSizeConstraint(QVBoxLayout.SetFixedSize)
+
+        # Добавляем контейнер с таблицей тренеров в основной лейаут
+        main_layout.addLayout(extra_trainers_layout)
+
+        # Контейнер для кнопки "Обновить" (в правый нижний угол)
+        button_layout = QVBoxLayout()
+        self.update_button = QPushButton("Обновить")
+        self.update_button.clicked.connect(self.refresh_schedule)
+        button_layout.addWidget(self.update_button)
+
+        # Устанавливаем фиксированный размер для кнопки
+        self.update_button.setFixedSize(100, 40)  # Пример для кнопки
+
+        # Центрируем кнопку
+        button_layout.setAlignment(Qt.AlignCenter)
+
+        # Добавляем кнопку в правый нижний угол
+        extra_trainers_layout.addLayout(button_layout)  # Добавляем кнопку в правую секцию
+
+        # Центральный виджет
+        central_widget = QWidget()
+        central_widget.setLayout(main_layout)
+        self.setCentralWidget(central_widget)
+
+        # Таймер для обновления
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.auto_update_schedule)
+        self.timer.start(3000)  # Обновление каждые 3 секунды
+
+    def on_back_button_click(self):
+        """Действие при нажатии на кнопку 'Назад'."""
+        print("Кнопка 'Назад' нажата")
+        if self.parent:
+            self.parent.switch_to_window(self.parent.second_window)  # Возвращаемся на главное меню
+
+
+
+    def update_schedule(self):
+        selected_items = self.schedule_table.selectedItems()
+        if selected_items:
+            trainer = self.trainer_combo.currentText()
+            color_name = self.get_trainer_color(trainer)
+            for item in selected_items:
+                current_color = item.background().color()
+                if current_color == QColor(color_name):
+                    item.setBackground(QColor("white"))
+                else:
+                    item.setBackground(QColor(color_name))
+        else:
+            print("Выберите ячейку в таблице расписания!")
+
+    def auto_update_schedule(self):
+        for row in range(self.schedule_table.rowCount()):
+            for col in range(self.schedule_table.columnCount()):
+                item = self.schedule_table.item(row, col)
+                if item is None:
+                    item = QTableWidgetItem()
+                    self.schedule_table.setItem(row, col, item)
+
+    def get_trainer_color(self, trainer):
+        """Функция получения цвета тренера."""
+        if trainer == "Иванов":
+            return "blue"
+        elif trainer == "Петров":
+            return "green"
+        elif trainer == "Сидоров":
+            return "red"
+        return None
+
+    def refresh_schedule(self):
+        """Обновление расписания."""
+        print("Обновление расписания...")
+        self.auto_update_schedule()
+
+
 
 class PassRecoveryWindow(QMainWindow):
     def __init__(self, parent):
@@ -505,7 +705,7 @@ def create_back_button(self):
 
 
 # Привязываем метод ко всем окнам
-for cls in [TrainerListWindow, DirectionListWindow, StudentListWindow, ScheduleWindow,
+for cls in [TrainerListWindow, DirectionListWindow, StudentListWindow, ScheduleApp,
             PassRecoveryWindow, StudentRegistrationWindow, TrainingSaleWindow, AccessControlWindow]:
     cls.create_back_button = create_back_button
 
