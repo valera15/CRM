@@ -1,23 +1,14 @@
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel,
-QLineEdit, QPushButton, QStackedWidget, QCalendarWidget, QTableWidgetItem,
-QHeaderView, QTableWidget, QComboBox, QScrollBar)
-from PyQt5.QtGui import QColor
-from PyQt5.QtCore import Qt, QTimer
-import sys
 from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QPushButton, QTableWidget,
-    QTableWidgetItem, QHeaderView
+    QApplication, QWidget, QMainWindow, QLabel, QLineEdit, QPushButton,
+    QVBoxLayout, QHBoxLayout, QGridLayout, QTableWidget, QTableWidgetItem,
+    QHeaderView, QComboBox, QSpinBox, QCheckBox, QScrollBar, QToolBar,
+    QStackedWidget, QCalendarWidget, QSpacerItem, QSizePolicy
 )
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QTableWidget, QTableWidgetItem, QPushButton, QComboBox, QLabel, QScrollBar
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
+import sys
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QPushButton, QComboBox, QLabel, QScrollBar, QWidget, QToolBar
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QColor
+
 
 class MainStackedWindow(QMainWindow):
     def __init__(self):
@@ -56,14 +47,14 @@ class MainWindow(QMainWindow):
         # Заголовок
         self.main_text = QLabel(self)
         self.main_text.setText("Войти в систему")
-        self.main_text.setAlignment(QtCore.Qt.AlignCenter)
+        self.main_text.setAlignment(Qt.AlignCenter)
         self.main_text.setGeometry(460, 100, 1000, 200)
         self.main_text.setStyleSheet("font-size: 96px;")
 
         # Поле для ввода логина
         self.login_label = QLabel(self)
         self.login_label.setText("Логин")
-        self.login_label.setAlignment(QtCore.Qt.AlignRight)
+        self.main_text.setAlignment(Qt.AlignCenter)
         self.login_label.setGeometry(560, 350, 300, 100)
         self.login_label.setStyleSheet("font-size: 72px;")
 
@@ -74,7 +65,7 @@ class MainWindow(QMainWindow):
         # Поле для ввода пароля
         self.password_label = QLabel(self)
         self.password_label.setText("Пароль")
-        self.password_label.setAlignment(QtCore.Qt.AlignRight)
+        self.main_text.setAlignment(Qt.AlignCenter)
         self.password_label.setGeometry(560, 500, 300, 100)
         self.password_label.setStyleSheet("font-size: 72px;")
 
@@ -112,7 +103,7 @@ class SecondWindow(QMainWindow):
         # Заголовок
         self.title = QLabel(self)
         self.title.setText("Главная страница")
-        self.title.setAlignment(QtCore.Qt.AlignCenter)
+        self.title.setAlignment(Qt.AlignCenter)
         self.title.setGeometry(560, 50, 800, 150)
         self.title.setStyleSheet("font-size: 96px;")
 
@@ -167,8 +158,7 @@ class SecondWindow(QMainWindow):
     def logout(self):
         # Завершить приложение
         QApplication.quit()
-    def logout(self):
-        QApplication.quit()
+
 
 class TrainerListWindow(QMainWindow):
     def __init__(self, parent):
@@ -474,9 +464,6 @@ class StudentListWindow(QMainWindow):
             print("Не выбрана запись для удаления")
 
 
-
-
-
 class ScheduleApp(QMainWindow):
     def __init__(self, parent=None):
         super(ScheduleApp, self).__init__(parent)
@@ -670,32 +657,436 @@ class ScheduleApp(QMainWindow):
         self.auto_update_schedule()
 
 
-
 class PassRecoveryWindow(QMainWindow):
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super(PassRecoveryWindow, self).__init__(parent)
         self.parent = parent
-        self.create_back_button()
+        self.init_ui()
+
+    def init_ui(self):
+        # Настройка главного виджета
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+
+        # Создание кнопки "Назад"
+        back_button = QPushButton("Назад", self)
+        back_button.setStyleSheet("font-size: 28px;")  # Увеличенный шрифт
+        back_button.setFixedWidth(200)  # Увеличенная ширина
+        back_button.setFixedHeight(50)  # Увеличенная высота
+        back_button.clicked.connect(self.go_back)  # Обработчик нажатия
+
+        # Создание заголовка
+        title_label = QLabel("Восстановление пропуска", self)
+        title_label.setStyleSheet("font-size: 72px; font-weight: bold;")  # Увеличенный шрифт
+        title_label.setAlignment(Qt.AlignCenter)
+
+        # Поле для ввода ФИО
+        fio_label = QLabel("ФИО ученика:", self)
+        fio_label.setStyleSheet("font-size: 24px;")
+        self.fio_input = QLineEdit(self)
+        self.fio_input.setFixedWidth(600)
+        self.fio_input.setFixedHeight(50)
+        self.fio_input.setStyleSheet("font-size: 24px;")
+
+        # Поле для ввода номера пропуска
+        pass_label = QLabel("Номер потерянного пропуска:", self)
+        pass_label.setStyleSheet("font-size: 24px;")
+        self.pass_input = QLineEdit(self)
+        self.pass_input.setFixedWidth(600)
+        self.pass_input.setFixedHeight(50)
+        self.pass_input.setStyleSheet("font-size: 24px;")
+
+        # Поле для ввода номера телефона
+        phone_label = QLabel("Номер телефона:", self)
+        phone_label.setStyleSheet("font-size: 24px;")
+        self.phone_input = QLineEdit(self)
+        self.phone_input.setFixedWidth(600)
+        self.phone_input.setFixedHeight(50)
+        self.phone_input.setStyleSheet("font-size: 24px;")
+
+        # Кнопка для поиска
+        find_button = QPushButton("Найти", self)
+        find_button.setStyleSheet("font-size: 28px;")  # Увеличенный шрифт
+        find_button.setFixedWidth(400)  # Увеличенная ширина
+        find_button.setFixedHeight(70)  # Увеличенная высота
+        find_button.clicked.connect(self.on_find_clicked)  # Обработчик нажатия
+
+        # Расположение виджетов в сетке
+        layout = QGridLayout()
+        layout.addWidget(fio_label, 0, 0, alignment=Qt.AlignRight)
+        layout.addWidget(self.fio_input, 0, 1, alignment=Qt.AlignLeft)
+        layout.addWidget(pass_label, 1, 0, alignment=Qt.AlignRight)
+        layout.addWidget(self.pass_input, 1, 1, alignment=Qt.AlignLeft)
+        layout.addWidget(phone_label, 2, 0, alignment=Qt.AlignRight)
+        layout.addWidget(self.phone_input, 2, 1, alignment=Qt.AlignLeft)
+        layout.addWidget(find_button, 3, 0, 1, 2, alignment=Qt.AlignCenter)
+
+        # Верхний контейнер для кнопки "Назад" и заголовка
+        top_layout = QVBoxLayout()
+        back_button_layout = QHBoxLayout()
+        back_button_layout.addWidget(back_button, alignment=Qt.AlignLeft)
+        back_button_layout.addStretch()
+        top_layout.addLayout(back_button_layout)
+        top_layout.addWidget(title_label)  # Размещение заголовка
+        top_layout.addStretch()  # Добавляем пространство снизу
+
+        # Основной контейнер
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(top_layout)  # Верхняя часть
+        main_layout.addLayout(layout)  # Основная форма
+        main_layout.addStretch()
+
+        # Установка контейнера как основного макета
+        central_widget.setLayout(main_layout)
+
+    def go_back(self):
+        if self.parent:
+            self.parent.switch_to_window(self.parent.second_window)  # Возвращаемся на главное меню
+
+    def on_find_clicked(self):
+        fio = self.fio_input.text().strip()
+        pass_number = self.pass_input.text().strip()
+        phone_number = self.phone_input.text().strip()
+
+        if fio or pass_number or phone_number:
+            print(f"Поиск информации по введённым данным:\nФИО: {fio}\nПропуск: {pass_number}\nТелефон: {phone_number}")
+        else:
+            print("Ошибка: все поля пустые. Введите хотя бы одно значение.")
+
 
 class StudentRegistrationWindow(QMainWindow):
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super(StudentRegistrationWindow, self).__init__(parent)
         self.parent = parent
-        self.create_back_button()
+        self.init_ui()
 
-class TrainingSaleWindow(QMainWindow):
-    def __init__(self, parent):
+    def init_ui(self):
+        # Настройка главного виджета
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+
+        # Создание кнопки "Назад"
+        back_button = QPushButton("Назад", self)
+        back_button.setStyleSheet("font-size: 28px;")  # Увеличенный шрифт
+        back_button.setFixedWidth(200)  # Увеличенная ширина
+        back_button.setFixedHeight(50)  # Увеличенная высота
+        back_button.clicked.connect(self.go_back)  # Обработчик нажатия
+
+        # Создание заголовка
+        title_label = QLabel("Регистрация ученика", self)
+        title_label.setStyleSheet("font-size: 72px; font-weight: bold;")  # Увеличенный шрифт
+        title_label.setAlignment(Qt.AlignCenter)
+
+        # Создание остальных виджетов
+        fio_label = QLabel("ФИО ученика:", self)
+        fio_label.setStyleSheet("font-size: 24px;")
+        self.fio_input = QLineEdit(self)
+        self.fio_input.setFixedWidth(600)
+        self.fio_input.setFixedHeight(50)
+        self.fio_input.setStyleSheet("font-size: 24px;")
+
+        birthdate_label = QLabel("Дата рождения:", self)
+        birthdate_label.setStyleSheet("font-size: 24px;")
+        self.birthdate_input = QLineEdit(self)
+        self.birthdate_input.setFixedWidth(600)
+        self.birthdate_input.setFixedHeight(50)
+        self.birthdate_input.setStyleSheet("font-size: 24px;")
+
+        phone_label = QLabel("Номер телефона:", self)
+        phone_label.setStyleSheet("font-size: 24px;")
+        self.phone_input = QLineEdit(self)
+        self.phone_input.setFixedWidth(600)
+        self.phone_input.setFixedHeight(50)
+        self.phone_input.setStyleSheet("font-size: 24px;")
+
+        pass_label = QLabel("Номер нового пропуска:", self)
+        pass_label.setStyleSheet("font-size: 24px;")
+        self.pass_input = QLineEdit(self)
+        self.pass_input.setFixedWidth(600)
+        self.pass_input.setFixedHeight(50)
+        self.pass_input.setStyleSheet("font-size: 24px;")
+
+        register_button = QPushButton("Зарегистрировать", self)
+        register_button.setStyleSheet("font-size: 28px;")  # Увеличенный шрифт
+        register_button.setFixedWidth(400)  # Увеличенная ширина
+        register_button.setFixedHeight(70)  # Увеличенная высота
+
+        # Расположение виджетов в сетке
+        layout = QGridLayout()
+        layout.addWidget(fio_label, 0, 0, alignment=Qt.AlignRight)
+        layout.addWidget(self.fio_input, 0, 1, alignment=Qt.AlignLeft)
+        layout.addWidget(birthdate_label, 1, 0, alignment=Qt.AlignRight)
+        layout.addWidget(self.birthdate_input, 1, 1, alignment=Qt.AlignLeft)
+        layout.addWidget(phone_label, 2, 0, alignment=Qt.AlignRight)
+        layout.addWidget(self.phone_input, 2, 1, alignment=Qt.AlignLeft)
+        layout.addWidget(pass_label, 3, 0, alignment=Qt.AlignRight)
+        layout.addWidget(self.pass_input, 3, 1, alignment=Qt.AlignLeft)
+        layout.addWidget(register_button, 4, 0, 1, 2, alignment=Qt.AlignCenter)
+
+        # Верхний контейнер для кнопки "Назад" и заголовка
+        top_layout = QVBoxLayout()
+        back_button_layout = QHBoxLayout()
+        back_button_layout.addWidget(back_button, alignment=Qt.AlignLeft)
+        back_button_layout.addStretch()
+        top_layout.addLayout(back_button_layout)
+        top_layout.addWidget(title_label)  # Размещение заголовка
+        top_layout.addStretch()  # Добавляем пространство снизу
+
+        # Основной контейнер
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(top_layout)  # Верхняя часть
+        main_layout.addLayout(layout)  # Основная форма
+        main_layout.addStretch()
+
+        # Установка контейнера как основного макета
+        central_widget.setLayout(main_layout)
+
+    def go_back(self):
+        if self.parent:
+            self.parent.switch_to_window(self.parent.second_window)  # Возвращаемся на главное меню
+
+class TrainingSaleWindow(QWidget):
+    def __init__(self, parent=None):
         super(TrainingSaleWindow, self).__init__(parent)
         self.parent = parent
-        self.create_back_button()
+        self.init_ui()
+
+    def init_ui(self):
+        # Настройка окна
+        self.setWindowTitle("Продажа тренировок")
+
+        # Создание кнопки "Назад"
+        back_button = QPushButton("\u2190 Назад", self)
+        back_button.setStyleSheet("font-size: 18px;")
+        back_button.setFixedWidth(150)
+        back_button.setFixedHeight(50)
+        back_button.clicked.connect(self.go_back)
+
+        # Создание заголовка
+        title_label = QLabel("Продажа тренировок", self)
+        title_label.setStyleSheet("font-size: 36px; font-weight: bold;")
+        title_label.setAlignment(Qt.AlignCenter)
+
+        # Создание виджетов формы
+        direction_label = QLabel("Направление:", self)
+        direction_label.setStyleSheet("font-size: 24px;")
+        self.direction_combo = QComboBox(self)
+        self.direction_combo.addItems(["...", "Йога", "Фитнес", "Бокс"])
+        self.direction_combo.setFixedWidth(200)
+        self.direction_combo.setFixedHeight(50)
+        self.direction_combo.setStyleSheet("font-size: 24px;")
+
+        trainer_label = QLabel("ФИО тренера:", self)
+        trainer_label.setStyleSheet("font-size: 24px;")
+        self.trainer_combo = QComboBox(self)
+        self.trainer_combo.addItems(["...", "Иванов И.И.", "Петров П.П.", "Сидоров С.С."])
+        self.trainer_combo.setFixedWidth(200)
+        self.trainer_combo.setFixedHeight(50)
+        self.trainer_combo.setStyleSheet("font-size: 24px;")
+
+        count_label = QLabel("Количество тренировок:", self)
+        count_label.setStyleSheet("font-size: 24px;")
+        self.count_spin = QSpinBox(self)
+        self.count_spin.setRange(1, 100)
+        self.count_spin.valueChanged.connect(self.update_total)
+        self.count_spin.setFixedWidth(150)
+        self.count_spin.setFixedHeight(50)
+        self.count_spin.setStyleSheet("font-size: 24px;")
+
+        pass_label = QLabel("Номер пропуска:", self)
+        pass_label.setStyleSheet("font-size: 24px;")
+        self.pass_input = QLineEdit(self)
+        self.pass_input.setFixedWidth(300)
+        self.pass_input.setFixedHeight(50)
+        self.pass_input.setStyleSheet("font-size: 24px;")
+
+        total_label = QLabel("ИТОГО:", self)
+        total_label.setStyleSheet("font-size: 24px; font-weight: bold;")
+        self.total_display = QLineEdit(self)
+        self.total_display.setReadOnly(True)
+        self.total_display.setFixedWidth(300)
+        self.total_display.setFixedHeight(50)
+        self.total_display.setStyleSheet("font-size: 24px;")
+
+        sell_button = QPushButton("Продать", self)
+        sell_button.setStyleSheet("font-size: 28px;")
+        sell_button.setFixedWidth(200)
+        sell_button.setFixedHeight(70)
+
+        # Макет для формы
+        form_layout = QGridLayout()
+        form_layout.addWidget(direction_label, 0, 0, alignment=Qt.AlignRight)
+        form_layout.addWidget(self.direction_combo, 0, 1, alignment=Qt.AlignLeft)
+        form_layout.addWidget(trainer_label, 0, 2, alignment=Qt.AlignRight)
+        form_layout.addWidget(self.trainer_combo, 0, 3, alignment=Qt.AlignLeft)
+        form_layout.addWidget(count_label, 0, 4, alignment=Qt.AlignRight)
+        form_layout.addWidget(self.count_spin, 0, 5, alignment=Qt.AlignLeft)
+        form_layout.addWidget(pass_label, 1, 0, 1, 1, alignment=Qt.AlignRight)
+        form_layout.addWidget(self.pass_input, 1, 1, 1, 2, alignment=Qt.AlignLeft)
+        form_layout.addWidget(total_label, 1, 3, alignment=Qt.AlignRight)
+        form_layout.addWidget(self.total_display, 1, 4, 1, 2, alignment=Qt.AlignLeft)
+        form_layout.addWidget(sell_button, 2, 0, 1, 6, alignment=Qt.AlignCenter)
+
+        # Верхний макет с кнопкой "Назад" и заголовком
+        top_layout = QVBoxLayout()
+        back_button_layout = QHBoxLayout()
+        back_button_layout.addWidget(back_button, alignment=Qt.AlignLeft)
+        back_button_layout.addStretch()
+        top_layout.addLayout(back_button_layout)
+        top_layout.addWidget(title_label)
+        top_layout.addStretch()
+
+        # Основной макет
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(top_layout)
+        main_layout.addLayout(form_layout)
+        main_layout.addStretch()
+
+        # Установка главного макета
+        self.setLayout(main_layout)
+
+    def update_total(self):
+        """Обновление итоговой стоимости тренировки."""
+        price_per_session = 300
+        count = self.count_spin.value()
+        total = count * price_per_session
+        self.total_display.setText(str(total))
+
+    def go_back(self):
+        """Переход к предыдущему окну."""
+        if self.parent:
+            self.parent.switch_to_window(self.parent.second_window)
+
+
 
 class AccessControlWindow(QMainWindow):
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super(AccessControlWindow, self).__init__(parent)
-        self.parent = parent
-        self.create_back_button()
+        self.parent = parent  # Родительское окно
+        self.init_ui()
 
-# Добавляем метод для кнопки "Назад"
+    def init_ui(self):
+        # Заголовок окна
+        self.title_label = QLabel("Пропускная система")
+        self.title_label.setStyleSheet("font-size: 60px; font-weight: bold;")
+        self.title_label.setAlignment(Qt.AlignCenter)
+        self.title_label.setFixedHeight(120)
+
+        # Кнопка "Назад"
+        back_button = QPushButton("Назад", self)
+        back_button.setStyleSheet("font-size: 28px;")
+        back_button.setFixedSize(150, 50)
+        back_button.clicked.connect(self.go_back)
+
+        # Поле "Направление"
+        self.direction_label = QLabel("Направление")
+        self.direction_label.setStyleSheet("font-size: 28px;")
+        self.direction_combo = QComboBox()
+        self.direction_combo.addItems(["...", "Фитнес", "Йога", "Бокс"])
+        self.direction_combo.setFixedSize(300, 50)
+
+        # Поле "ФИО тренера"
+        self.trainer_label = QLabel("ФИО тренера")
+        self.trainer_label.setStyleSheet("font-size: 28px;")
+        self.trainer_combo = QComboBox()
+        self.trainer_combo.addItems(["...", "Иванов И.И.", "Петров П.П.", "Сидоров С.С."])
+        self.trainer_combo.setFixedSize(300, 50)
+
+        # Поле "Количество тренировок"
+        training_label = QLabel("Количество тренировок")
+        training_label.setStyleSheet("font-size: 28px;")
+        self.training_spin = QSpinBox()
+        self.training_spin.setMinimum(0)
+        self.training_spin.setMaximum(100)
+        self.training_spin.setValue(1)
+        self.training_spin.setFixedSize(100, 50)
+
+        # Поле "Номер пропуска"
+        pass_number_label = QLabel("Номер пропуска")
+        pass_number_label.setStyleSheet("font-size: 28px;")
+        self.pass_number_input = QLineEdit()
+        self.pass_number_input.setFixedSize(300, 50)
+
+        # Чекбокс "Тренер"
+        self.trainer_checkbox = QCheckBox("Тренер")
+        self.trainer_checkbox.setStyleSheet("font-size: 28px;")
+        self.trainer_checkbox.setFixedSize(150, 50)
+        self.trainer_checkbox.stateChanged.connect(self.toggle_trainer_fields)
+
+        # Кнопка "Продать"
+        sell_button = QPushButton("Продать")
+        sell_button.setStyleSheet("font-size: 28px;")
+        sell_button.setFixedSize(200, 60)
+
+        # Компоновка элементов
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignCenter)
+
+        # Поля ввода в горизонтальных блоках
+        form_layout = QGridLayout()
+        form_layout.setAlignment(Qt.AlignCenter)
+        form_layout.setHorizontalSpacing(20)
+        form_layout.setVerticalSpacing(20)
+
+        form_layout.addWidget(self.direction_label, 0, 0, Qt.AlignCenter)
+        form_layout.addWidget(self.direction_combo, 0, 1, Qt.AlignCenter)
+
+        form_layout.addWidget(self.trainer_label, 1, 0, Qt.AlignCenter)
+        form_layout.addWidget(self.trainer_combo, 1, 1, Qt.AlignCenter)
+
+        form_layout.addWidget(training_label, 2, 0, Qt.AlignCenter)
+        form_layout.addWidget(self.training_spin, 2, 1, Qt.AlignCenter)
+
+        form_layout.addWidget(pass_number_label, 3, 0, Qt.AlignCenter)
+        form_layout.addWidget(self.pass_number_input, 3, 1, Qt.AlignCenter)
+
+        form_layout.addWidget(self.trainer_checkbox, 4, 0, 1, 2, Qt.AlignCenter)
+
+        # Добавляем кнопки
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(sell_button)
+        button_layout.setAlignment(Qt.AlignCenter)
+
+        # Основной layout
+        main_layout = QVBoxLayout()
+        top_layout = QHBoxLayout()
+
+        top_layout.addWidget(back_button, alignment=Qt.AlignLeft)
+        top_layout.addStretch()
+
+        main_layout.addLayout(top_layout)
+        main_layout.addWidget(self.title_label, alignment=Qt.AlignTop | Qt.AlignCenter)
+        main_layout.addLayout(form_layout)
+        main_layout.addLayout(button_layout)
+
+        # Центральный виджет
+        central_widget = QWidget()
+        central_widget.setLayout(main_layout)
+
+        # Установка главного окна
+        self.setCentralWidget(central_widget)
+
+    def toggle_trainer_fields(self):
+        """Скрытие или отображение полей и меток "Направление" и "ФИО тренера"."""
+        is_trainer_checked = self.trainer_checkbox.isChecked()
+        self.direction_label.setVisible(not is_trainer_checked)
+        self.direction_combo.setVisible(not is_trainer_checked)
+        self.trainer_label.setVisible(not is_trainer_checked)
+        self.trainer_combo.setVisible(not is_trainer_checked)
+
+    def go_back(self):
+        """Возврат к предыдущему окну."""
+        if self.parent:
+            print("Переход на предыдущее окно...")
+            self.parent.switch_to_window(self.parent.second_window)
+        else:
+            print("Родительское окно не задано.")
+
+
+
+
+
+
 def create_back_button(self):
     self.back_button = QPushButton(self)
     self.back_button.setText("⟸")
